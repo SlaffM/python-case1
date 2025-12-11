@@ -123,7 +123,7 @@ def get_dec_dau(end_date):
   day_start = end_date
   for u_id, u_logins in logins.items():
     for login_date in u_logins:
-      if login_date >= day_start and login_date <= end_date:
+      if login_date == day_start:
         uniq_users.add(u_id)
         break
   return len(uniq_users)
