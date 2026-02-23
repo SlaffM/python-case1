@@ -1,4 +1,8 @@
+import csv
 from collections import defaultdict
+from datetime import date, timedelta
+
+
 def get_platform_city_results():
   platforms = defaultdict(dict)
 
@@ -41,8 +45,6 @@ with open('platform_city_results.txt', 'w', encoding='utf-8') as f:
       f.write(f'- Город: {city}, доля затрат на рекламу: {expenses}%\n')
 
 
-
-import csv
 def calculate_average_budget(file, filter):
   elements = []
   with open(file, newline='', encoding='utf-8') as csv_file:
@@ -74,8 +76,6 @@ def calculate_average_budget(file, filter):
 
 
 
-import csv
-from datetime import date, timedelta
 def get_missing_campaign_dates(file):
 
   start_date = date(2022,1,1)
@@ -103,7 +103,77 @@ def get_missing_campaign_dates(file):
     yield item
 
 
+def group_campaign_data(file):
+  elements = []
+  with open(file, newline='', encoding='utf-8') as csv_file:
+    reader = csv.DictReader(csv_file)
+    for el in reader:
+      elements.append(el)      
 
+  parameters = dict()
+
+  for el in elements:
+
+    parameter = el.get('Город')
+    budget = int(el.get('Бюджет'))
+    clicks = float(el.get('Клики'))
+
+    if parameter in parameters:
+      parameters[parameter][0] += clicks
+      parameters[parameter][1] += budget
+    else:
+      parameters[parameter] = [clicks, budget]
+
+  sorted_data = dict(sorted(parameters.items()))
+
+  output_data = [
+      {
+          'Город': town,
+          'Количество кликов': props[0],
+          'Суммарный бюджет':props[1],
+      }
+      for town, props in sorted_data.items()
+  ]
+  return output_data
+
+
+def campaign_generator(file, town, budget):
+  elements = []
+  with open(file, newline='', encoding='utf-8') as csv_file:
+    reader = csv.DictReader(csv_file)
+    for el in reader:
+      elements.append(el)
+
+  cities = list()
+
+  for el in elements:
+
+    city = el.get('Город')
+
+    if city != town:
+      continue   
+    
+    budget_company = int(el.get('Бюджет'))
+      
+    if budget_company <= int(budget):
+      continue
+
+    id_company = el.get('ID Кампании')
+    type_company = el.get('Тип кампании')
+    platform = el.get('Платформа')
+    dohod = el.get('Доход')
+      
+    city = {}
+    city['ID Кампании'] = id_company
+    city['Тип'] = type_company
+    city['Платформа'] = platform
+    city['Доход'] = dohod
+    cities.append(city) 
+
+  sorted_data = sorted(cities, key=lambda x : int(x['ID Кампании']))
+
+  for item in sorted_data:
+    yield item  
 
 
 
